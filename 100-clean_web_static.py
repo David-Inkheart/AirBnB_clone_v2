@@ -15,12 +15,18 @@ def do_clean(number=0):
     if number < 1:
         number = 1
 
-    archive_list = local("ls -t versions", capture=True).split("\n")
-    archive_list_len = len(archive_list)
-    for archive in archive_list[number: archive_list_len]:
-        local("rm versions/{}".format(archive))
+    with lcd("versions"):
+        local_files = local("ls -td web_static_*", capture=True)
+        local_files_list = local_files.split()
+        out_of_date_local_files = local_files_list[number:]
 
-    archive_list = run("ls -t /data/web_static/releases").split("\n")
-    archive_list_len = len(archive_list)
-    for archive in archive_list[number: archive_list_len]:
-        run("rm -rf /data/web_static/releases/{}".format(archive))
+        for file in out_of_date_local_files:
+            local("rm -f {file}".format(file=file))
+
+    with cd("/data/web_static/releases"):
+        remote_folders = run("ls -td web_static_*")
+        remote_folders_list = remote_folders.split()
+        out_of_date_remote_folders = remote_folders_list[number:]
+
+        for folder in out_of_date_remote_folders:
+            run("rm -rf {folder}".format(folder=folder))
