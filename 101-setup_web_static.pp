@@ -18,8 +18,9 @@ exec { 'create_directory_tree':
 }
 
 # Create a fake HTML file in the test directory
-file { '/data/web_static/releases/test/index.html':
+file { 'create_fake_html':
     ensure  => 'file',
+    path    => '/data/web_static/releases/test/index.html',
     content => "<!DOCTYPE html>
 
 <html>
