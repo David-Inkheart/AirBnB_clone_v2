@@ -1,69 +1,75 @@
 include stdlib
 
-# Update package lists
-exec { 'Update lists':
-    command => '/usr/bin/apt update'
-}
+# Nginx configuration file
+$nginx_conf = "server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    add_header X-Served-By ${hostname};
+    root   /var/www/html;
+    index  index.html index.htm;
+    location /hbnb_static {
+        alias /data/web_static/current;
+        index index.html index.htm;
+    }
+    location /redirect_me {
+        return 301 http://cuberule.com/;
+    }
+    error_page 404 /404.html;
+    location /404 {
+      root /var/www/html;
+      internal;
+    }
+}"
 
-# Install Nginx
 package { 'nginx':
-    ensure  => 'present',
-    require => Exec['Update lists']
+  ensure   => 'present',
+  provider => 'apt'
+}
+->file { '/data':
+  ensure  => 'directory'
+}
+->file { '/data/web_static':
+  ensure => 'directory'
+}
+->file { '/data/web_static/releases':
+  ensure => 'directory'
+}
+->file { '/data/web_static/releases/test':
+  ensure => 'directory'
+}
+->file { '/data/web_static/shared':
+  ensure => 'directory'
+}
+->file { '/data/web_static/releases/test/index.html':
+  ensure  => 'present',
+  content => "Hey People\n"
+}
+->file { '/data/web_static/current':
+  ensure => 'link',
+  target => '/data/web_static/releases/test'
+}
+->exec { 'chown -R ubuntu:ubuntu /data/':
+  path => '/usr/bin/:/usr/local/bin/:/bin/'
 }
 
-# Create the directory tree
-exec { 'Create Directory Tree':
-    command => '/bin/mkdir -p /data/web_static/releases/test /data/web_static/shared',
-    require => Package['nginx']
+file { '/var/www':
+  ensure => 'directory'
 }
-
-$head = "  <head>\n  </head>"
-$body = "  <body>\n    Holberton School\n  </body>"
-$index = "<html>\n${head}\n${body}\n</html>\n"
-
-# Create a fake HTML file with simple content,
-# to test Nginx configuration
-file { 'Create Fake HTML':
-    ensure  => 'present',
-    path    => '/data/web_static/releases/test/index.html',
-    content => $index,
-    require => Exec['Create Directory Tree']
+->file { '/var/www/html':
+  ensure => 'directory'
 }
-
-# Create a symbolic link '/data/web_static/current' linked to the
-# '/data/web_static/releases/test/' folder.
-file { 'Create Symbolic Link':
-    ensure  => 'link',
-    path    => '/data/web_static/current',
-    force   => true,
-    target  => '/data/web_static/releases/test',
-    require => File['Create Fake HTML']
+->file { '/var/www/html/index.html':
+  ensure  => 'present',
+  content => "Hello World!\n"
 }
-
-# Ensures that Nginx is running
-service { 'nginx':
-    ensure  => 'running',
-    enable  => true,
-    require => Package['nginx']
+->file { '/var/www/html/404.html':
+  ensure  => 'present',
+  content => "Ceci n'est pas une page\n"
 }
-
-# Set permissions for 'ubuntu' user
-exec { 'Set permissions':
-    command => '/bin/chown -R ubuntu:ubuntu /data',
-    require => File['Create Symbolic Link']
+->file { '/etc/nginx/sites-available/default':
+  ensure  => 'present',
+  content => $nginx_conf
 }
-
-# Set a new location for a Nginx VHost 
-$loc_header='location /hbnb_static/ {'
-$loc_content='alias /data/web_static/current/;'
-$new_location="\n\t${loc_header}\n\t\t${loc_content}\n\t}\n"
-
-# Write the new location to the default Nginx VHost
-file_line { 'Set Nginx Location':
-    ensure  => 'present',
-    path    => '/etc/nginx/sites-available/default',
-    after   => 'server_name \_;',
-    line    => $new_location,
-    notify  => Service['nginx'],
-    require => Exec['Set permissions']
+->exec { 'nginx restart':
+  path => '/etc/init.d/'
 }
