@@ -17,29 +17,21 @@ exec { 'create_directory_tree':
     require => Package['nginx']
 }
 
-# Create a fake HTML file in the test directory
+$head_content = "  <head>\n  </head>"
+$body_content = "  <body>\n    Hey People\n  </body>"
+$index_content = "<html>\n${head_content}\n${body_content}\n</html>\n"
+
+# Create a fake HTML file with simple content,
+# to test Nginx configuration
 file { 'create_fake_html':
-    ensure  => 'file',
+    ensure  => 'present',
     path    => '/data/web_static/releases/test/index.html',
-    content => "<!DOCTYPE html>
-
-<html>
-
-  <head>
-
-  </head>
-
-  <body>
-
-    <p>Hey People<p>
-
-  </body>
-
-</html>",
+    content => $index_content,
     require => Exec['create_directory_tree']
 }
 
-# Create a symbolic link between /data/web_static/current and /data/web_static/releases/test/
+# Create a symbolic link '/data/web_static/current' linked to the
+# '/data/web_static/releases/test/' folder.
 file { 'create_symbolic_link':
     ensure  => 'link',
     path    => '/data/web_static/current',
@@ -75,3 +67,4 @@ service { 'nginx':
     enable  => true,
     require => Package['nginx']
 }
+
