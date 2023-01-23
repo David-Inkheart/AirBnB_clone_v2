@@ -12,21 +12,15 @@ def do_clean(number=0):
     """
     Deletes out-of-date archives
     """
-    if number < 1:
-        number = 1
+    number = 1 if int(number) == 0 else int(number)
 
+    archives_local = sorted(os.listdir("versions"))
+    [archives_local.pop() for i in range(number)]
     with lcd("versions"):
-        local_files = local("ls -td web_static_*", capture=True)
-        local_files_list = local_files.split()
-        out_of_date_local_files = local_files_list[number:]
-
-        for file in out_of_date_local_files:
-            local("rm -f {file}".format(file=file))
+        [local("rm ./{}".format(a)) for a in archives_local]
 
     with cd("/data/web_static/releases"):
-        remote_folders = run("ls -td web_static_*")
-        remote_folders_list = remote_folders.split()
-        out_of_date_remote_folders = remote_folders_list[number:]
-
-        for folder in out_of_date_remote_folders:
-            run("rm -rf {folder}".format(folder=folder))
+        archives_remote = run("ls -tr").split()
+        archives_remote = [a for a in archives_remote if "web_static_" in a]
+        [archives_remote.pop() for i in range(number)]
+        [run("rm -rf ./{}".format(a)) for a in archives_remote]
