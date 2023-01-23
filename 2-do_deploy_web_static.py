@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 """
-generates a .tgz archive from the contents of the web_static folder
-of my AirBnB Clone repo, using the function do_pack
+generates a .tgz archive from the contents of the web_static
+folder of my AirBnB Clone repo, using the function do_pack
 """
 from datetime import datetime
 from fabric.api import *
@@ -28,6 +28,10 @@ def do_pack():
 
 
 def do_deploy(archive_path):
+    """
+    distributes an archive
+    to your web servers
+    """
     if not os.path.exists(archive_path):
         return False
 
