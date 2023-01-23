@@ -1,70 +1,69 @@
 include stdlib
 
 # Update package lists
-exec { 'update_package_lists':
+exec { 'Update lists':
     command => '/usr/bin/apt update'
 }
 
 # Install Nginx
 package { 'nginx':
     ensure  => 'present',
-    require => Exec['update_package_lists']
+    require => Exec['Update lists']
 }
 
 # Create the directory tree
-exec { 'create_directory_tree':
+exec { 'Create Directory Tree':
     command => '/bin/mkdir -p /data/web_static/releases/test /data/web_static/shared',
     require => Package['nginx']
 }
 
-$head_content = "  <head>\n  </head>"
-$body_content = "  <body>\n    Hey People\n  </body>"
-$index_content = "<html>\n${head_content}\n${body_content}\n</html>\n"
+$head = "  <head>\n  </head>"
+$body = "  <body>\n    Holberton School\n  </body>"
+$index = "<html>\n${head}\n${body}\n</html>\n"
 
 # Create a fake HTML file with simple content,
 # to test Nginx configuration
-file { 'create_fake_html':
+file { 'Create Fake HTML':
     ensure  => 'present',
     path    => '/data/web_static/releases/test/index.html',
-    content => $index_content,
-    require => Exec['create_directory_tree']
+    content => $index,
+    require => Exec['Create Directory Tree']
 }
 
 # Create a symbolic link '/data/web_static/current' linked to the
 # '/data/web_static/releases/test/' folder.
-file { 'create_symbolic_link':
+file { 'Create Symbolic Link':
     ensure  => 'link',
     path    => '/data/web_static/current',
     force   => true,
     target  => '/data/web_static/releases/test',
-    require => File['create_fake_html']
+    require => File['Create Fake HTML']
 }
 
-# Set permissions for 'ubuntu' user
-exec { 'set_permissions':
-    command => '/bin/chown -R ubuntu:ubuntu /data',
-    require => File['create_symbolic_link']
-}
-
-# Set a new location for a Nginx VHost 
-$location_header='location /hbnb_static/ {'
-$location_content='alias /data/web_static/current/;'
-$new_location="\n\t${location_header}\n\t\t${location_content}\n\t}\n"
-
-# Write the new location to the default Nginx VHost
-file_line { 'set_nginx_location':
-    ensure  => 'present',
-    path    => '/etc/nginx/sites-available/default',
-    after   => 'server_name \_;',
-    line    => $new_location,
-    notify  => Service['nginx'],
-    require => Exec['set_permissions']
-}
-
-# Ensure that Nginx is running
+# Ensures that Nginx is running
 service { 'nginx':
     ensure  => 'running',
     enable  => true,
     require => Package['nginx']
 }
 
+# Set permissions for 'ubuntu' user
+exec { 'Set permissions':
+    command => '/bin/chown -R ubuntu:ubuntu /data',
+    require => File['Create Symbolic Link']
+}
+
+# Set a new location for a Nginx VHost 
+$loc_header='location /hbnb_static/ {'
+$loc_content='alias /data/web_static/current/;'
+$new_location="\n\t${loc_header}\n\t\t${loc_content}\n\t}\n"
+
+# Write the new location to the default Nginx VHost
+file_line { 'Set Nginx Location':
+    ensure  => 'present',
+    path    => '/etc/nginx/sites-available/default',
+    after   => 'server_name \_;',
+    line    => $new_location,
+    notify  => Service['nginx'],
+    require => Exec['Set permissions']
+}
