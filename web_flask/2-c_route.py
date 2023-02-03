@@ -23,7 +23,7 @@ def hbnb_page():
 def c_page(text):
     """Display 'C' followed by the value of the text variable
     """
-    return 'C ' + text.replace('_',' ')
+    return 'C ' + text.replace('_', ' ')
 
 
 if __name__ == '__main__':
