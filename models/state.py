@@ -17,23 +17,18 @@ class State(BaseModel, Base):
                 corresponding State instance is deleted.
         else:
             cities: a list of cities
-
     """
     __tablename__ = "states"
+    name = Column(String(128), nullable=False)
 
     if getenv("HBNB_TYPE_STORAGE") == "db":
-        name = Column(String(128), nullable=False)
         cities = relationship("City",
                               cascade='all, delete, delete-orphan',
                               backref="state")
     else:
-        name = ''
-
         @property
         def cities(self):
-            """return a list of
-            city instances
-            """
+            """return a list of city instances"""
             from models import storage
             city_list = []
             cities_dict = storage.all(City)
