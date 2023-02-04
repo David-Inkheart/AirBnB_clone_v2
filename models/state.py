@@ -31,7 +31,9 @@ class State(BaseModel, Base):
 
         @property
         def cities(self):
-            """return a list of city instances"""
+            """return a list of
+		    city instances
+		    """
             from models import storage
             city_list = []
             cities_dict = storage.all(City)
