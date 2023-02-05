@@ -40,7 +40,6 @@ for state_key in all_states.keys():
 
 # Delete the new State
 fs.delete(new_state)
-print("@@@@@@@@@@@@@ Deleting dey shele @@@@@@@@@")
 
 # All States
 all_states = fs.all(State)
