@@ -1,4 +1,4 @@
-#!usr/bin/python3
+#!/usr/bin/python3
 """This modules defines a class to manage
 database storage for HBNBclone"""
 
